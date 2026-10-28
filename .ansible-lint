@@ -1,0 +1,6 @@
+---
+# Variable names are kept simple on purpose to make the demo easy to read
+skip_list:
+  - var-naming[no-role-prefix]
+exclude_paths:
+  - collections/

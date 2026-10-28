@@ -1,0 +1,50 @@
+---
+# Play 1 - Facts, set_fact and templates on all hosts
+- name: Gather information and build a report (all hosts)
+  hosts: all
+  gather_facts: true
+
+  vars:
+    # Play-level variable
+    demo_banner: "Ansible from zero to hero"
+
+  pre_tasks:
+    - name: Print the banner
+      ansible.builtin.debug:
+        msg: "{{ demo_banner }} - target {{ inventory_hostname }} ({{ environment_name }})"
+      tags: [always]
+
+  roles:
+    - role: common
+      tags: [common]
+
+  post_tasks:
+    - name: Read the generated report
+      ansible.builtin.slurp:
+        src: "{{ report_dir }}/{{ common_report_filename }}"
+      register: report_content
+      tags: [report]
+
+    - name: Show the report
+      ansible.builtin.debug:
+        msg: "{{ (report_content.content | b64decode).split('\n') }}"
+      tags: [report]
+
+# Play 2 - Create the pod on the local Kubernetes cluster
+- name: Kubernetes pod on localhost
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Check that kubectl can reach the cluster
+      ansible.builtin.command: kubectl cluster-info
+      register: cluster_info
+      changed_when: false
+      tags: [k8s]
+
+    - name: Deploy the pod with the k8s_pod role
+      ansible.builtin.include_role:
+        name: k8s_pod
+        apply:
+          tags: [k8s]
+      tags: [k8s]

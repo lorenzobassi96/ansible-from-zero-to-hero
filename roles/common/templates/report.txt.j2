@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+# Project     : {{ project_name }}
+# Environment : {{ environment_name }}
+# Generated   : {{ ansible_facts['date_time']['date'] }}
+
+== Host ==
+Inventory name : {{ inventory_hostname }}
+Hostname       : {{ host_summary.hostname }}
+System         : {{ host_summary.os }}
+Kernel         : {{ host_summary.kernel }}
+CPUs           : {{ host_summary.cpus }}
+RAM            : {{ host_summary.memory_gb }} GB
+IP             : {{ host_summary.ip }}
+{% if is_big_host %}
+
+This host has at least 4 GB of RAM: suitable for heavier workloads.
+{% else %}
+
+This host has less than 4 GB of RAM: suitable for light workloads only.
+{% endif %}
+
+== Commands ==
+{% for cmd in common_check_commands %}
+- {{ '%-8s' | format(cmd) }} : {{ 'present' if cmd in commands_found else 'MISSING' }}
+{% endfor %}

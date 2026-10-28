@@ -1,0 +1,10 @@
+---
+# Variables for localhost (used by the k8s_pod role)
+k8s_namespace: ansible-demo
+k8s_pod_name: hello-ansible
+k8s_pod_image: nginx:1.27-alpine
+k8s_pod_port: 80
+k8s_pod_message: "Hello from the pod created with Ansible!"
+k8s_pod_labels:
+  app: hello-ansible
+  managed-by: ansible

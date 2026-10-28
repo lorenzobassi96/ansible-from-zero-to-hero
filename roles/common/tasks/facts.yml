@@ -1,0 +1,29 @@
+---
+# Facts (ansible_*) are already gathered by the playbook (gather_facts: true).
+# Here we reshape them with set_fact to create our own variables.
+- name: Compute a host summary (set_fact)
+  ansible.builtin.set_fact:
+    host_summary:
+      hostname: "{{ ansible_facts['hostname'] }}"
+      os: "{{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+      kernel: "{{ ansible_facts['kernel'] }}"
+      cpus: "{{ ansible_facts['processor_vcpus'] }}"
+      memory_gb: "{{ (ansible_facts['memtotal_mb'] / 1024) | round(1) }}"
+      ip: "{{ ansible_facts['default_ipv4']['address'] | default('n/a') }}"
+    is_big_host: "{{ ansible_facts['memtotal_mb'] >= 4096 }}"
+
+- name: Check that the required commands are present
+  ansible.builtin.command: "which {{ item }}"
+  loop: "{{ common_check_commands }}"
+  register: command_checks
+  changed_when: false
+  failed_when: false
+
+- name: Store the lists of found and missing commands (set_fact)
+  ansible.builtin.set_fact:
+    commands_found: "{{ command_checks.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+    commands_missing: "{{ command_checks.results | rejectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+
+- name: Show the summary
+  ansible.builtin.debug:
+    msg: "{{ host_summary }}"

@@ -1,0 +1,7 @@
+---
+# Variables for all hosts (lower precedence than host_vars)
+project_name: ansible-from-zero-to-hero
+environment_name: demo
+
+# Directory where the template-generated report is written
+report_dir: "/tmp/{{ project_name }}"

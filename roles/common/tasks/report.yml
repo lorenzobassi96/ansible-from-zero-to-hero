@@ -1,0 +1,13 @@
+---
+- name: Create the report directory
+  ansible.builtin.file:
+    path: "{{ report_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Generate the report from the template
+  ansible.builtin.template:
+    src: report.txt.j2
+    dest: "{{ report_dir }}/{{ common_report_filename }}"
+    mode: "{{ common_report_mode }}"
+  notify: Announce report updated

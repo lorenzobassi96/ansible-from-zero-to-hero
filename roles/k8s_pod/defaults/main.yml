@@ -1,0 +1,13 @@
+---
+k8s_namespace: ansible-demo
+k8s_pod_name: hello-ansible
+k8s_pod_image: nginx:1.27-alpine
+k8s_pod_port: 80
+k8s_pod_message: "Hello from Ansible"
+k8s_pod_labels:
+  app: "{{ k8s_pod_name }}"
+  managed-by: ansible
+
+# present = create/update, absent = delete the namespace and everything in it
+k8s_state: present
+k8s_wait_timeout: 120

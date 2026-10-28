@@ -1,0 +1,5 @@
+---
+# Handlers only run if the notifying task reported "changed"
+- name: Announce report updated
+  ansible.builtin.debug:
+    msg: "Report updated at {{ report_dir }}/{{ common_report_filename }}"

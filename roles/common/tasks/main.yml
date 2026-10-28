@@ -1,0 +1,8 @@
+---
+- name: Build derived variables from facts (set_fact)
+  ansible.builtin.import_tasks: facts.yml
+  tags: [facts]
+
+- name: Generate the report from a template
+  ansible.builtin.import_tasks: report.yml
+  tags: [report]

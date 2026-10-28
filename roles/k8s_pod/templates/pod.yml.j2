@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ k8s_pod_name }}
+  namespace: {{ k8s_namespace }}
+  labels:
+{% for key, value in k8s_pod_labels.items() %}
+    {{ key }}: "{{ value }}"
+{% endfor %}
+spec:
+  containers:
+    - name: web
+      image: {{ k8s_pod_image }}
+      ports:
+        - containerPort: {{ k8s_pod_port }}
+      readinessProbe:
+        httpGet:
+          path: /
+          port: {{ k8s_pod_port }}
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: html
+      configMap:
+        name: {{ k8s_pod_name }}-html

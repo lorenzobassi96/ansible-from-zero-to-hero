@@ -1,0 +1,10 @@
+---
+# Role defaults (lowest precedence: easy to override)
+common_report_filename: "report-{{ inventory_hostname }}.txt"
+common_report_mode: "0644"
+
+# Commands whose presence is reported
+common_check_commands:
+  - python3
+  - git
+  - kubectl
