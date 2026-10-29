@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ k8s_app_name }}
+  namespace: {{ k8s_namespace }}
+  labels:
+    app: {{ k8s_app_name }}
+{% for key, value in k8s_app_labels.items() %}
+    {{ key }}: "{{ value }}"
+{% endfor %}
+spec:
+  selector:
+    app: {{ k8s_app_name }}
+  ports:
+    - port: {{ k8s_app_port }}
+      targetPort: {{ k8s_app_port }}

@@ -1,0 +1,18 @@
+---
+k8s_namespace: ansible-demo
+
+# Deployment (stateless) or StatefulSet (stable pod names: <name>-0, <name>-1, ...)
+k8s_app_kind: Deployment
+# One app per inventory host, so hosts sharing a cluster do not overwrite each other
+k8s_app_name: "hello-{{ inventory_hostname }}"
+k8s_app_replicas: 2
+k8s_app_image: nginx:1.27-alpine
+k8s_app_port: 80
+k8s_app_message: "Hello from Ansible"
+# The "app" label is added by the templates and used by the selectors
+k8s_app_labels:
+  managed-by: ansible
+
+# present = create/update, absent = delete the namespace and everything in it
+k8s_state: present
+k8s_wait_timeout: 180

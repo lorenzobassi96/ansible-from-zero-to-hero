@@ -5,3 +5,6 @@ environment_name: demo
 
 # Directory where the template-generated report is written
 report_dir: "/tmp/{{ project_name }}"
+
+# App settings (see roles/k8s_app/defaults/main.yml for all the options)
+k8s_app_message: "Hello from {{ inventory_hostname }}, deployed with Ansible!"

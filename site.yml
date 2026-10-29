@@ -30,21 +30,13 @@
         msg: "{{ (report_content.content | b64decode).split('\n') }}"
       tags: [report]
 
-# Play 2 - Create the pod on the local Kubernetes cluster
-- name: Kubernetes pod on localhost
-  hosts: localhost
+# Play 2 - For every host: get its kubeconfig, then deploy the app on its cluster
+- name: Kubernetes workload on the cluster of each host
+  hosts: all
   gather_facts: true
 
-  tasks:
-    - name: Check that kubectl can reach the cluster
-      ansible.builtin.command: kubectl cluster-info
-      register: cluster_info
-      changed_when: false
-      tags: [k8s]
-
-    - name: Deploy the pod with the k8s_pod role
-      ansible.builtin.include_role:
-        name: k8s_pod
-        apply:
-          tags: [k8s]
+  roles:
+    - role: kubeconfig
+      tags: [kubeconfig, k8s]
+    - role: k8s_app
       tags: [k8s]

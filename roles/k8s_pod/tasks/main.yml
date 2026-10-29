@@ -1,8 +1,0 @@
----
-- name: Remove the resources
-  ansible.builtin.include_tasks: absent.yml
-  when: k8s_state == 'absent'
-
-- name: Create the resources
-  ansible.builtin.include_tasks: present.yml
-  when: k8s_state == 'present'

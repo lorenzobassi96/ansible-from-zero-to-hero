@@ -1,0 +1,78 @@
+---
+- name: Check that the workload kind is supported
+  ansible.builtin.assert:
+    that: k8s_app_kind in ['Deployment', 'StatefulSet']
+    fail_msg: "k8s_app_kind must be Deployment or StatefulSet, got '{{ k8s_app_kind }}'"
+    quiet: true
+
+- name: Create the namespace {{ k8s_namespace }}
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ k8s_namespace }}"
+
+- name: Apply the ConfigMap from the template
+  kubernetes.core.k8s:
+    state: present
+    template: configmap.yml.j2
+
+- name: Apply the Service from the template
+  kubernetes.core.k8s:
+    state: present
+    template: service.yml.j2
+
+- name: Apply the headless Service required by StatefulSets
+  kubernetes.core.k8s:
+    state: present
+    template: headless-service.yml.j2
+  when: k8s_app_kind == 'StatefulSet'
+
+# Switching k8s_app_kind must not leave the previous workload (and its pods) running
+- name: Remove the workload of the other kind
+  kubernetes.core.k8s:
+    state: absent
+    api_version: apps/v1
+    kind: "{{ 'StatefulSet' if k8s_app_kind == 'Deployment' else 'Deployment' }}"
+    name: "{{ k8s_app_name }}"
+    namespace: "{{ k8s_namespace }}"
+
+- name: Remove the headless Service when it is not needed
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Service
+    name: "{{ k8s_app_name }}-headless"
+    namespace: "{{ k8s_namespace }}"
+  when: k8s_app_kind == 'Deployment'
+
+- name: Compute the ConfigMap checksum (set_fact)
+  ansible.builtin.set_fact:
+    k8s_app_config_checksum: "{{ lookup('ansible.builtin.template', 'configmap.yml.j2') | hash('sha256') }}"
+
+- name: Apply the workload from the template and wait until it is ready
+  kubernetes.core.k8s:
+    state: present
+    template: workload.yml.j2
+    wait: true
+    wait_timeout: "{{ k8s_wait_timeout }}"
+
+- name: Read the workload status
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: "{{ k8s_app_kind }}"
+    name: "{{ k8s_app_name }}"
+    namespace: "{{ k8s_namespace }}"
+  register: workload_info
+
+- name: Store the workload details (set_fact)
+  ansible.builtin.set_fact:
+    k8s_app_ready: "{{ workload_info.resources[0].status.readyReplicas | default(0) }}"
+
+- name: Show the result
+  ansible.builtin.debug:
+    msg:
+      - "{{ k8s_app_kind }} {{ k8s_namespace }}/{{ k8s_app_name }}: {{ k8s_app_ready }}/{{ k8s_app_replicas }} replicas ready"
+      - "Try: kubectl -n {{ k8s_namespace }} port-forward svc/{{ k8s_app_name }} 8080:{{ k8s_app_port }}"

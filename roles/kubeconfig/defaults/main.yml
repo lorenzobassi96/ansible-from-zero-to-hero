@@ -1,0 +1,13 @@
+---
+# Where the fetched kubeconfigs are stored on the controller (git-ignored: they contain credentials)
+kubeconfig_local_dir: "{{ playbook_dir }}/kubeconfigs"
+
+# Kubeconfig to read on the remote VM (set kubeconfig_remote_become: true if it needs root)
+kubeconfig_remote_src: "{{ ansible_facts['user_dir'] }}/.kube/config"
+kubeconfig_remote_become: false
+
+# Kubeconfig used when the target is localhost (nothing to fetch)
+kubeconfig_localhost_path: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config"
+
+# Fetch only from remote hosts
+kubeconfig_fetch: "{{ inventory_hostname != 'localhost' }}"

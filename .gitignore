@@ -1,4 +1,6 @@
 .venv/
 collections/
+kubeconfigs/
+report-*.txt
 *.retry
 .vault_pass

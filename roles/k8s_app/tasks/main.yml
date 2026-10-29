@@ -1,0 +1,17 @@
+---
+# The Kubernetes API is called from the controller (delegate_to) using the kubeconfig
+# selected for this host by the "kubeconfig" role.
+- name: Run against the cluster of this host
+  delegate_to: localhost
+  become: false
+  module_defaults:
+    group/kubernetes.core.k8s:
+      kubeconfig: "{{ k8s_kubeconfig }}"
+  block:
+    - name: Remove the resources
+      ansible.builtin.include_tasks: absent.yml
+      when: k8s_state == 'absent'
+
+    - name: Create the resources
+      ansible.builtin.include_tasks: present.yml
+      when: k8s_state == 'present'

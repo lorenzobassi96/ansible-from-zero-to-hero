@@ -1,0 +1,48 @@
+---
+- name: Fetch the kubeconfig from the VM
+  when: kubeconfig_fetch | bool
+  block:
+    - name: Create the local kubeconfig directory
+      ansible.builtin.file:
+        path: "{{ kubeconfig_local_dir }}"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      become: false
+
+    - name: Read the kubeconfig on the VM
+      ansible.builtin.slurp:
+        src: "{{ kubeconfig_remote_src }}"
+      become: "{{ kubeconfig_remote_become }}"
+      register: kubeconfig_raw
+      no_log: true
+
+    # A kubeconfig produced on the VM often points to localhost: make it reachable from here
+    - name: Save the kubeconfig locally, pointing to the VM address
+      ansible.builtin.copy:
+        dest: "{{ kubeconfig_local_dir }}/{{ inventory_hostname }}.yml"
+        content: >-
+          {{ kubeconfig_raw.content | b64decode
+          | regex_replace('(server:\s*https?://)(127\.0\.0\.1|localhost|0\.0\.0\.0|\[::1\])',
+          '\g<1>' ~ ansible_host) }}
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+      no_log: true
+
+- name: Choose the kubeconfig to use for this host (set_fact)
+  ansible.builtin.set_fact:
+    k8s_kubeconfig: >-
+      {{ (kubeconfig_local_dir ~ '/' ~ inventory_hostname ~ '.yml')
+      if kubeconfig_fetch | bool else kubeconfig_localhost_path }}
+
+- name: Check that the cluster is reachable with that kubeconfig
+  kubernetes.core.k8s_cluster_info:
+    kubeconfig: "{{ k8s_kubeconfig }}"
+  delegate_to: localhost
+  become: false
+  register: cluster_info
+
+- name: Show the cluster version
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }}: Kubernetes {{ cluster_info.version.server.kubernetes.gitVersion }} via {{ k8s_kubeconfig }}"

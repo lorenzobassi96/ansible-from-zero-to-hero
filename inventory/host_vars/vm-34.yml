@@ -1,0 +1,4 @@
+---
+# Host-specific variables for "vm-34": override group_vars/all.yml
+environment_name: vm-lab
+report_dir: "/root/{{ project_name }}"
